@@ -1,0 +1,12 @@
+const yaml = require('C:/Users/XYD/.dsh/profiles/desktop/node_modules/js-yaml');
+const fs = require('fs');
+const doc = yaml.load(fs.readFileSync('C:/Users/XYD/.dsh/profiles/desktop/cordis.patch.yml','utf8'));
+const s = JSON.stringify(doc, null, 1);
+const i = s.indexOf('"include:mnemon-strategy-scoped"');
+console.log(i < 0 ? 'block not found' : s.slice(i, i + 900));
+const j = s.indexOf('"writableSourceKeys"', i);
+const w = s.slice(j, j + 260);
+console.log('--- writable ---'); console.log(w);
+const sel = (s.slice(i, j).match(/mnemon-source-[a-z-]+/g) || []);
+const wr = (w.match(/mnemon-source-[a-z-]+/g) || []);
+console.log('selected=', sel, 'writable=', wr, 'subset=', wr.every(k => sel.includes(k)));
