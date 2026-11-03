@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# gh 垫片：绕过 DSH workspace-write 沙箱的「子进程管道」限制。
+#
+# 现象：沙箱里任何程序用管道派生 git 都会 EPERM（gh 报
+#   failed to run git: pipe: Access is denied.
+# ），但 bash 自己派生 git 是允许的。所以这里先用 git 解析当前仓库，
+# 再用 GH_REPO 告诉 gh 目标仓库，gh 就不会自己去调 git 了。
+#
+# 放在 PATH 里、排在 "C:\Program Files\GitHub CLI\bin" 之前生效。
+# 不在 git 仓库里时原样透传，行为与真 gh 一致。
+
+real_gh="/c/Program Files/GitHub CLI/bin/gh.exe"
+
+if [[ -z "${GH_REPO:-}" ]]; then
+  url="$(git config --get remote.origin.url 2>/dev/null || true)"
+  case "$url" in
+    *github.com[:/]*)
+      repo="${url##*github.com}"
+      repo="${repo#:}"
+      repo="${repo#/}"
+      repo="${repo%.git}"
+      [[ -n "$repo" ]] && export GH_REPO="$repo"
+      ;;
+  esac
+fi
+
+exec "$real_gh" "$@"

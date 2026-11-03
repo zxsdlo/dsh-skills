@@ -14,6 +14,26 @@
 - **加标签 / 去标签**：`gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **关闭**：先用 `gh issue comment <number> --body "..."` 把说明发出去，再执行 `gh issue close <number>`。对已经关闭的议题，`gh issue close --comment` 会把那条评论丢掉，但退出码仍然是 0。
 
+## 在 DSH 沙箱里运行（本工作区必读）
+
+DSH 的 `workspace-write` 沙箱禁止「程序通过管道派生 git」：任何用管道起子进程的写法都返回 `EPERM`，`gh` 因此报
+
+```
+failed to run git: pipe: Access is denied.
+```
+
+但 bash 自己派生 `git` 是允许的，所以这里装了一个垫片 `C:\Program Files\GitHub CLI\bin\gh`（bash 脚本，PATH 解析时排在 `gh.exe` 之前）：它先用 `git config --get remote.origin.url` 解析当前仓库、设置 `GH_REPO`，再 `exec` 真正的 `gh.exe`。于是在本仓库里**直接写 `gh issue create ...` 就能用**，不需要手工加 `-R`。
+
+兜底写法（垫片不生效、或在仓库外的目录里运行）：
+
+- 加环境变量：`GH_REPO=zxsdlo/dsh-skills gh issue create --title "..." --body "..."`；
+- 或加参数：`gh issue create -R zxsdlo/dsh-skills --title "..." --body "..."`。
+
+已知限制：
+
+- `gh repo view` **不带参数**时不认 `GH_REPO`，仍会去调 git 并失败；改成 `gh repo view zxsdlo/dsh-skills`。
+- 真正依赖 git 的命令（`gh pr create`、`gh pr checkout`）在这种沙箱里跑不通，需要在 DSH 之外的普通终端执行。
+
 从 `git remote -v` 推断仓库；在克隆目录里运行时，`gh` 会自动完成这件事。
 
 只往用户自己的仓库里建议题。不要往 `mattpocock/skills`（这些技能来自的那个仓库）里建，除非用户就是它的所有者。在 fork 里，`gh` 可能默认指向上游父仓库，所以在一次会话里第一次执行 `gh issue create` 之前，先用 `gh repo view --json nameWithOwner` 检查目标仓库；如果它不是用户的仓库，就跟用户确认。
