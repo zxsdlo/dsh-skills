@@ -24,10 +24,10 @@ failed to run git: pipe: Access is denied.
 
 但 bash 自己派生 `git` 是允许的，所以这里装了一个垫片 `C:\Program Files\GitHub CLI\bin\gh`（bash 脚本，PATH 解析时排在 `gh.exe` 之前）：它先用 `git config --get remote.origin.url` 解析当前仓库、设置 `GH_REPO`，再 `exec` 真正的 `gh.exe`。于是在本仓库里**直接写 `gh issue create ...` 就能用**，不需要手工加 `-R`。
 
-垫片源码在仓库里：`gh-shim/gh`。重装（换机器 / gh 升级覆盖后）用管理员 PowerShell：
+垫片源码在 `gh-shim/gh`。重装（换机器，或 gh 升级把它覆盖掉）时，在管理员 PowerShell 里、于工作区根目录执行：
 
 ```powershell
-Copy-Item -LiteralPath 'D:\百度网盘下载文件\DeepSeek Harness的工作区\插件skills和软件安装与配置\gh-shim\gh' -Destination 'C:\Program Files\GitHub CLIin\gh' -Force
+Copy-Item .\gh-shim\gh 'C:\Program Files\GitHub CLI\bin\gh' -Force
 ```
 
 兜底写法（垫片不生效、或在仓库外的目录里运行）：

@@ -159,3 +159,4 @@ ollama-install/mnemon-probe/
 *.exe
 *.7z
 *.db
+.push-token
